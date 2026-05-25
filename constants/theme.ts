@@ -2,6 +2,7 @@ export const colors = {
   // Base
   bg:           '#0e0e10',
   bgCard:       'rgba(255,255,255,0.04)',
+  bgCardHov:    'rgba(255,255,255,0.07)',
   border:       'rgba(255,255,255,0.08)',
   borderHov:    'rgba(255,255,255,0.14)',
   text:         '#f0ece4',

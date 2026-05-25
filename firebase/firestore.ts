@@ -41,6 +41,7 @@ export async function createUserDocument(uid: string, email: string): Promise<vo
     rewardMode: 'per_session',
     closingNotificationEnabled: true,
     calendarConnected: false,
+    onboardingComplete: false,
   });
 }
 
@@ -87,10 +88,9 @@ export async function setPrimaryGoal(uid: string, goalId: string): Promise<void>
 
 // ── Sessions ───────────────────────────────────────────────────
 
-export async function writeSession(uid: string, session: Omit<SessionDocument, 'startedAt' | 'completedAt'> & { startedAt: Date; completedAt: Date }): Promise<void> {
+export async function writeSession(uid: string, session: Omit<SessionDocument, 'completedAt'> & { startedAt: Date; completedAt: Date }): Promise<void> {
   await addDoc(collection(db, 'users', uid, 'sessions'), {
     ...session,
-    startedAt: serverTimestamp(),
     completedAt: serverTimestamp(),
   });
 }

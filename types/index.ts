@@ -42,6 +42,9 @@ export interface UserDocument {
   // AI
   weeklyObservation?: string;
 
+  // Onboarding
+  onboardingComplete: boolean;
+
   // Calendar (Phase 2)
   calendarConnected: boolean;
   calendarProvider?: 'google';
