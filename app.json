@@ -25,11 +25,7 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
-      "expo-apple-authentication",
-      [
-        "react-native-reanimated",
-        { "processNestedWorklets": true }
-      ]
+      "expo-apple-authentication"
     ]
   }
 }

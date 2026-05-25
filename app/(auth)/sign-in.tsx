@@ -15,13 +15,14 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function SignIn() {
   const router = useRouter();
-
+  //response from google's auth flow
   const [, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
     iosClientId:     process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     webClientId:     process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   });
 
+  //once response is mounted, if it's successful, sign in with firebase and create user doc if needed
   useEffect(() => {
     if (response?.type !== 'success') return;
     const { id_token, access_token } = response.params;
@@ -42,6 +43,7 @@ export default function SignIn() {
         ],
       });
       if (!cred.identityToken) return;
+      //firebase side
       await signInWithApple(cred.identityToken, cred.authorizationCode ?? '');
       router.replace('/(app)');
     } catch {
