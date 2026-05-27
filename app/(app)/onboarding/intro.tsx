@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Dimensions, type ViewToken } from 'react-native';
+import { View, Text, FlatList, StyleSheet, useWindowDimensions, Dimensions, type ViewToken } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen } from '../../../components/ui/Screen';
 import { PrimaryBtn } from '../../../components/ui/PrimaryBtn';
@@ -24,6 +24,8 @@ const SLIDES = [
 
 export default function IntroScreen() {
   const router = useRouter();
+  //web testing
+  const {width} = useWindowDimensions();
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -52,13 +54,20 @@ export default function IntroScreen() {
           ref={flatListRef}
           data={SLIDES}
           horizontal
+          // snappy scrolling
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           onViewableItemsChanged={onViewableItemsChanged}
+          // consider an item "viewable" if at least 50% of it is visible
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
           keyExtractor={(_, i) => String(i)}
+           getItemLayout={(_, index) => ({
+            length: width,
+            offset: width * index,
+            index,
+          })}
           renderItem={({ item }) => (
-            <View style={s.slide}>
+            <View style={[s.slide, { width }]}>
               <Text style={s.title}>{item.title}</Text>
               <Text style={s.body}>{item.body}</Text>
             </View>
@@ -90,7 +99,6 @@ export default function IntroScreen() {
 const s = StyleSheet.create({
   container: { flex: 1, paddingBottom: 40 },
   slide: {
-    width,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 32,
