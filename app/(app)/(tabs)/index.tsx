@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Screen } from '../../../components/ui/Screen';
 import { PrimaryBtn } from '../../../components/ui/PrimaryBtn';
 import { FlameIcon } from '../../../components/ui/FlameIcon';
@@ -10,7 +12,7 @@ import { useUserDoc } from '../../../hooks/useUserDoc';
 import { useFlameScore } from '../../../hooks/useFlameScore';
 import { useCountdown } from '../../../hooks/useCountdown';
 import { useMode } from '../../../hooks/useMode';
-import { getActiveGoals } from '../../../firebase/firestore';
+import { getActiveGoals, setPrimaryGoal } from '../../../firebase/firestore';
 import type { GoalDocument } from '../../../types';
 
 export default function HomeScreen() {
@@ -22,10 +24,12 @@ export default function HomeScreen() {
   const { mode, label: modeLabel } = useMode(userDoc?.sessionAnchorTime ?? null);
   const [goals, setGoals] = useState<Array<GoalDocument & { id: string }>>([]);
 
-  useEffect(() => {
-    if (!user) return;
-    getActiveGoals(user.uid).then(setGoals);
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      getActiveGoals(user.uid).then(setGoals);
+    }, [user])
+  );
 
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening';
@@ -67,7 +71,16 @@ export default function HomeScreen() {
         {/* Goals list */}
         <Text style={s.sectionTitle}>Goals</Text>
         {goals.map((goal) => (
-          <View key={goal.id} style={s.goalCard}>
+          <Pressable
+            key={goal.id}
+            style={s.goalCard}
+            onPress={() => router.push(`/(app)/goal-editor?goalId=${goal.id}`)}
+            onLongPress={() => {
+              if (!user || goal.isPrimary) return;
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              setPrimaryGoal(user.uid, goal.id).then(() => getActiveGoals(user.uid).then(setGoals));
+            }}
+          >
             <Text style={s.goalGlyph}>{goal.glyph}</Text>
             <View style={s.goalText}>
               <View style={s.goalHeader}>
@@ -81,13 +94,13 @@ export default function HomeScreen() {
               {goal.sub ? <Text style={s.goalSub}>{goal.sub}</Text> : null}
               <Text style={s.goalSessions}>{goal.totalSessions} sessions</Text>
             </View>
-          </View>
+          </Pressable>
         ))}
 
         {/* Add a mission */}
-        <View style={s.addCard}>
+        <Pressable style={s.addCard} onPress={() => router.push('/(app)/goal-editor')}>
           <Text style={s.addText}>+ Add a mission</Text>
-        </View>
+        </Pressable>
 
         {/* Flame score */}
         <View style={s.flameRow}>

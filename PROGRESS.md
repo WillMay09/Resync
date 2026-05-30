@@ -81,10 +81,11 @@ Watches `useAuth()` + `useSegments()`. Redirects unauthenticated users to sign-i
 |------|--------|
 | `types/index.ts` | Added `onboardingComplete: boolean` to `UserDocument` |
 | `constants/theme.ts` | Added `bgCardHov: 'rgba(255,255,255,0.07)'` color token |
-| `firebase/firestore.ts` | Added `onboardingComplete: false` to `createUserDocument()` defaults |
+| `firebase/firestore.ts` | Added `onboardingComplete: false` to `createUserDocument()` defaults. Added `getGoal()`, `updateGoal()`, `archiveGoal()` for goals CRUD. Rewrote `setPrimaryGoal()` to use Firestore `runTransaction` — queries for all `isPrimary: true` goals and clears them in the same atomic transaction that sets the new primary, preventing the race condition where concurrent clients could leave multiple goals marked primary. |
 | `store/sessionStore.ts` | Expanded `ActiveSession` with `distractionRating`, `completedAt`, `durationMinutes`. Added `setDistractionRating()` and `completeSession()` actions. Session data now accumulates through the flow and is only written to Firestore on "Done". |
 | `app/(app)/_layout.tsx` | Rewritten: now watches `useUserDoc()` for `onboardingComplete` and redirects to onboarding or tabs accordingly |
 | `app/(app)/index.tsx` | Rewritten: redirect-only component that routes to `(tabs)` or `onboarding/intro` based on `onboardingComplete` |
+| `app/(app)/(tabs)/index.tsx` | Goal cards are now tappable (navigates to goal editor) and long-pressable (sets as primary). "+ Add a mission" card navigates to goal editor in create mode. Goals list refreshes on screen focus via `useFocusEffect`. |
 
 ### What Was Created
 
@@ -131,6 +132,12 @@ Watches `useAuth()` + `useSegments()`. Redirects unauthenticated users to sign-i
 | `app/(app)/onboarding/first-goal.tsx` | `TextInput` for goal label + optional subtitle. Row of 8 unicode glyph options (✦ ◆ ▲ ● ★ ♦ ⬡ ◉). Writes goal to Firestore `goals` subcollection with `isPrimary: true`. |
 | `app/(app)/onboarding/resync-demo.tsx` | Large circular Resync button with Reanimated pulse glow (`withRepeat`). Long-press (1.5s) triggers decompression: haptic → random neuroscience fact (3s display) → "You're ready" confirmation. "Begin your journey" sets `onboardingComplete: true` and redirects to tabs. |
 
+**Goals CRUD (1 file)**
+
+| File | Purpose |
+|------|---------|
+| `app/(app)/goal-editor.tsx` | Full-screen goal editor. Route param `goalId` switches between create and edit mode. Create mode adds a new goal and sets it as primary. Edit mode updates label, subtitle, glyph. Archive button (edit mode only) soft-deletes by setting `active: false`. Back navigation returns to home screen, which refetches goals on focus. |
+
 **Session Flow (5 files)**
 
 | File | Purpose |
@@ -156,6 +163,9 @@ Sign in
     → Mode pill (deep/shallow)
     → Countdown to session
     → Goals list
+      → Tap goal → Goal editor (edit mode)
+      → Long-press goal → Set as primary ("Today")
+      → "+ Add a mission" → Goal editor (create mode)
     → "Start session" button
       → Resync button (decompression)
       → Distraction report (1/2/3)
@@ -229,8 +239,8 @@ firebase deploy --only functions
 | Sprint | Focus | Status |
 |--------|-------|--------|
 | **Sprint 0** | Auth, schema, Cloud Functions, hooks, UI primitives | Complete |
-| **Sprint 1** | Onboarding, home screen, session flow (pre → active → post), tab nav | Complete |
+| **Sprint 1** | Onboarding, home screen, session flow (pre → active → post), tab nav, goals CRUD | Complete |
 | **Sprint 2** | Rive flame animation, RevenueCat paywall, push notifications | Next |
 | **Sprint 3** | AI coaching (Claude API), analytics (PostHog) | |
-| **Sprint 4** | App blocking (iOS Focus Mode, Android Accessibility), settings screen | |
+| **Sprint 4** | App blocking, settings screen, offline session queue (`expo-sqlite`) | |
 | **Sprint 5** | Launch prep (TestFlight, Play Console, App Store assets) | |

@@ -19,6 +19,7 @@ export default function FirstGoalScreen() {
 
   async function handleContinue() {
     if (!user || !label.trim()) return;
+    //api call to create goal
     await addGoal(user.uid, {
       label: label.trim(),
       sub: sub.trim(),
